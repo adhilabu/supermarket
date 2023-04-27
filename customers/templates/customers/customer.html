@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"></meta>
+    <title>Customer</title>
+    {% comment %} <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+    integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65"
+    crossorigin="anonymous"
+    /> {% endcomment %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.1.10/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+   {% comment %} <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script> {% endcomment %}
+  </head>
+  <body>
+  <div id="vuee">
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Update Customer</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <form @submit.prevent="updateCustomer">
+            <div class="modal-body">
+                <div class="form-group">
+                  <input type="name" class="form-control"                                            
+                  v-model="update_name"                                
+                  placeholder="name">
+                </div>
+                <div class="form-group">
+                  <input type="address" class="form-control"                                            
+                  v-model="update_address"                                
+                  placeholder="address">
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+              <button v-on:click="updateCustomer" class="btn btn-primary" data-dismiss="modal">Submit</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div id="app">
+        <h3>Customer Creation Form</h3>
+        <form @submit.prevent="createCustomer">
+          <div class="form-group">
+            <input type="code" class="form-control"                                            
+            v-model.lazy="customer_code"                                
+            placeholder="code">
+          </div>
+          <div class="form-group">
+            <input type="name" class="form-control"                                            
+            v-model.lazy="customer_name"                             
+            placeholder="name">
+          </div>
+          <div class="form-group">
+            <input type="address" class="form-control"                                            
+            v-model.lazy="customer_address"                             
+            placeholder="address">
+        </div>
+        <input type="submit" value="Submit" class="btn btn-primary">
+      </form>
+    </div>
+      <h2>Customer Details Table</h2>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th scope="col">Customer code</th>
+            <th scope="col">Customer name</th>
+            <th scope="col">Customer address</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(customer, index) in customers" >
+            <td>[[customer.customer_code]]</td>
+            <td>[[customer.customer_name]]</td>
+            <td>[[customer.customer_address]]</td>
+            <td>
+                <button type="button" v-on:click="editCustomer(customer.customer_code)" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">Edit</button>
+                <button type="button" class="btn btn-primary" v-on:click="deleteCustomer(customer.customer_code)">Delete</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+    <script>
+            var app = new Vue({
+              el: '#vuee',
+              delimiters:  ['[[', ']]'],
+              data: {
+                base_url: 'http://127.0.0.1:8000',
+                create_customer: '/customers/create/',
+                get_all_customer: '/customers/getall/',
+                edit_customer: '/customers/update/',
+                delete_customer: '/customers/delete/',
+                update_customer: '/customers/update/',
+                update_code:'',
+                update_name:'',
+                update_address:'',
+                customer_code:'',
+                customer_name:'',
+                customer_address:'',
+                id:'',
+                customers: [],
+              },
+              methods: {
+                  createCustomer(submitEvent){
+                      let url = this.base_url + this.create_customer
+                      let body = {
+                          "customer_code": this.customer_code,
+                          "customer_name": this.customer_name,
+                          "customer_address": this.customer_address
+                        }
+                      axios.post(url,body)
+                        .then((response) => {
+                          this.fetchCustomers()
+                        })
+                  },
+                  fetchCustomers(){
+                    let url = this.base_url + this.get_all_customer
+                    let body = {}
+                    axios.post(url, body)
+                    .then((response) => {
+                      let customer_data = response.data
+                      this.customers = customer_data;
+                      console.log(this.customers);
+                    })
+                  },
+                  deleteCustomer(code){
+                      let url = this.base_url + this.delete_customer
+                      let body = {
+                          "customer_code": code,
+                        }
+                      axios.post(url, body)
+                        .then((response) => {
+                          this.fetchCustomers()
+                        })
+                  },
+                  editCustomer(code){
+                    this.update_code = code;
+                    this.setCustomerNull();
+                    this.update_name='';
+                    this.update_address='';
+                  },
+                  updateCustomer(submitEvent){
+                      let url = this.base_url+this.update_customer
+                      let body = {
+                          "customer_code": this.update_code,
+                          "customer_name": this.update_name,
+                          "customer_address": this.update_address
+                        }
+                      axios.post(url,body)
+                        .then((response) => {
+                          this.fetchCustomers()
+                        })
+                      this.setCustomerNull();
+                  },
+                  setCustomerNull(){
+                    this.customer_code = '';
+                    this.customer_name = '';
+                    this.customer_address = '';
+                  },
+              },
+              mounted() {
+                  this.fetchCustomers();
+              }
+            })
+    </script>
+  </body>
+</html>
